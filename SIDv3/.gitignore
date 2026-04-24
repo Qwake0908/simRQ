@@ -1,0 +1,109 @@
+# ==========================================
+# Python 基础
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==========================================
+# 虚拟环境 (Virtual Environments)
+# ==========================================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+bin/
+include/
+lib/
+share/
+pyvenv.cfg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ==========================================
+# PyTorch Lightning & 机器学习特有
+# ==========================================
+# 默认日志目录
+lightning_logs/
+# 训练模型权重 (Checkpoints)
+*.ckpt
+*.pt
+*.pth
+# 超参数配置文件 (通常由 Lightning 自动生成)
+.hparams.yaml
+# 常见的日志记录器输出
+wandb/
+mlruns/
+outputs/
+# 数据集缓存或本地数据
+# 注意：项目源码中有 RQSID/data/dataset.py 等代码文件，不要忽略源码 data 目录
+# 仅忽略用来存放实际数据文件的特定目录，或者使用具体的文件后缀
+data_files/
+dataset/
+.cache/
+
+# ==========================================
+# 项目自定义测试输出
+# ==========================================
+tests/data/
+tests/outputs/
+*.parquet
+
+# ==========================================
+# IDE & 编辑器
+# ==========================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+
+# 临时文件
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ==========================================
+# 测试与质量保证
+# ==========================================
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
