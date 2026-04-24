@@ -1,125 +1,125 @@
-# Generative Recommendation with Semantic IDs (GRID)
+# 基于语义ID的生成式推荐系统 (GRID)
 [![PyTorch](https://img.shields.io/badge/pytorch-2.0%2B-red)](https://pytorch.org/)
 [![Hydra](https://img.shields.io/badge/config-hydra-89b8cd)](https://hydra.cc/)
 [![Lightning](https://img.shields.io/badge/pytorch-lightning-792ee5)](https://lightning.ai/)
 [![arXiv](https://img.shields.io/badge/arXiv-2507.22224-b31b1b.svg)](https://arxiv.org/abs/2507.22224)
 
 
-**GRID** (Generative Recommendation with Semantic IDs) is a state-of-the-art framework for generative recommendation systems using semantic IDs, developed by a group of scientists and engineers from [Snap Research](https://research.snap.com/team/user-modeling-and-personalization.html). This project implements novel approaches for learning semantic IDs from text embedding and generating recommendations through transformer-based generative models.
+**GRID**（Generative Recommendation with Semantic IDs，基于语义ID的生成式推荐）是由 [Snap Research](https://research.snap.com/team/user-modeling-and-personalization.html) 的科学家和工程师团队开发的最先进的生成式推荐系统框架。本项目实现了从文本嵌入学习语义ID，以及通过基于Transformer的生成模型进行推荐的新方法。
 
-## 🚀 Overview
+## 🚀 概述
 
-GRID facilitates generative recommendation three overarching steps:
+GRID 通过三个主要步骤实现生成式推荐：
 
-- **Embedding Generation with LLMs**: Converting item text into embeddings using any LLMs available on Huggingface. 
-- **Semantic ID Learning**: Converting item embedding into hierarchical semantic IDs using Residual Quantization techniques such as RQ-KMeans, RQ-VAE, RVQ. 
-- **Generative Recommendations**: Using transformer architectures to generate recommendation sequences as semantic ID tokens. 
+- **基于LLM的嵌入生成**：使用 Huggingface 上可用的任意大语言模型，将物品文本转换为嵌入向量。
+- **语义ID学习**：使用残差量化技术（如 RQ-KMeans、RQ-VAE、RVQ）将物品嵌入转换为层次化语义ID。
+- **生成式推荐**：使用 Transformer 架构以语义ID token 的形式生成推荐序列。
 
 
-## 📦 Installation
+## 📦 安装
 
-### Prerequisites
+### 前置条件
 - Python 3.10+
-- CUDA-compatible GPU (recommended)
+- CUDA 兼容的 GPU（推荐）
 
-### Setup Environment
+### 环境配置
 
 ```bash
-# Clone the repository
+# 克隆仓库
 git clone https://github.com/snap-research/GRID.git
 cd GRID
 
-# Install dependencies
+# 安装依赖
 pip install -r requirements.txt
 ```
 
-## 🎯 Quick Start
+## 🎯 快速开始
 
-### 1. Data Preparation
+### 1. 数据准备
 
-Prepare your dataset in the expected format:
+按照以下格式准备数据集：
 ```
 data/
-├── train/       # training sequence of user history 
-├── validation/  # validation sequence of user history 
-├── test/        # testing sequence of user history 
-└── items/       # text of all items in the dataset
+├── train/       # 用户历史行为的训练序列
+├── validation/  # 用户历史行为的验证序列
+├── test/        # 用户历史行为的测试序列
+└── items/       # 数据集中所有物品的文本信息
 ```
 
-We provide pre-processed Amazon data explored in the [P5 paper](https://arxiv.org/abs/2203.13366) [4]. The data can be downloaded from this [google drive link](https://drive.google.com/file/d/1B5_q_MT3GYxmHLrMK0-lAqgpbAuikKEz/view?usp=sharing).
+我们提供了 [P5 论文](https://arxiv.org/abs/2203.13366) [4] 中使用的预处理 Amazon 数据。数据可从此 [Google Drive 链接](https://drive.google.com/file/d/1B5_q_MT3GYxmHLrMK0-lAqgpbAuikKEz/view?usp=sharing) 下载。
 
-### 2. Embedding Generation with LLMs
+### 2. 基于LLM的嵌入生成
 
-Generate embeddings from LLMs, which later will be transformed into semantic IDs. 
+使用大语言模型生成嵌入向量，这些嵌入将在后续步骤中转换为语义ID。
 
 ```bash
-python -m src.inference experiment=sem_embeds_inference_flat data_dir=data/amazon_data/beauty # avaiable data includes 'beauty', 'sports', and 'toys'
+python -m src.inference experiment=sem_embeds_inference_flat data_dir=data/amazon_data/beauty # 可用数据包括 'beauty'、'sports' 和 'toys'
 ```
 
-### 3. Train and Generate Semantic IDs
+### 3. 训练和生成语义ID
 
-Learn semantic ID centroids for embeddings generated in step 2:
+为第2步生成的嵌入学习语义ID质心：
 
 ```bash
 python -m src.train experiment=rkmeans_train_flat \
     data_dir=data/amazon_data/beauty \
-    embedding_path=<output_path_from_step_2>/merged_predictions_tensor.pt \ # this can be found in the log dirs in step2
-    embedding_dim=2048 \ # the model dimension of the LLMs you use in step 2. 2048 for flan-t5-xl as used in this example.
-    num_hierarchies=3 \  # we train 3 codebooks
-    codebook_width=256 \ # each codebook has 256 rows of centroids  
+    embedding_path=<第2步的输出路径>/merged_predictions_tensor.pt \ # 可在第2步的日志目录中找到
+    embedding_dim=2048 \ # 第2步使用的LLM的模型维度。本例中使用 flan-t5-xl，维度为2048。
+    num_hierarchies=3 \  # 训练3个码本
+    codebook_width=256 \ # 每个码本有256行质心
 ```
 
-Generate SIDs:
+生成语义ID：
 
 ```bash
 python -m src.inference experiment=rkmeans_inference_flat \
     data_dir=data/amazon_data/beauty \
-    embedding_path=<output_path_from_step_2>/merged_predictions_tensor.pt \ 
+    embedding_path=<第2步的输出路径>/merged_predictions_tensor.pt \ 
     embedding_dim=2048 \ 
     num_hierarchies=3 \  
     codebook_width=256 \ 
-    ckpt_path=<the_checkpoint_you_just_get_above> # this can be found in the log dir for training SIDs
+    ckpt_path=<上面训练得到的检查点路径> # 可在训练语义ID的日志目录中找到
 ```
 
 
-### 4. Train Generative Recommendation Model with Semantic IDs
+### 4. 使用语义ID训练生成式推荐模型
 
-Train the recommendation model using the learned semantic IDs:
+使用学习到的语义ID训练推荐模型：
 
 ```bash
 python -m src.train experiment=tiger_train_flat \
     data_dir=data/amazon_data/beauty \ 
-    semantic_id_path=<output_path_from_step_3>/pickle/merged_predictions_tensor.pt \
-    num_hierarchies=4 # Please note that we add 1 for num_hierarchies because in the previous step we appended one additional digit to de-duplicate the semantic IDs we generate.
+    semantic_id_path=<第3步的输出路径>/pickle/merged_predictions_tensor.pt \
+    num_hierarchies=4 # 注意：我们将 num_hierarchies 加1，因为在第3步中我们为语义ID添加了一个额外的去重数字
 ```
 
-### 4. Generate Recommendations
+### 5. 生成推荐
 
-Run inference to generate recommendations:
+运行推理生成推荐结果：
 
 ```bash
 python -m src.inference experiment=tiger_inference_flat \
     data_dir=data/amazon_data/beauty \ 
-    semantic_id_path=<output_path_from_step_3>/pickle/merged_predictions_tensor.pt \
-    ckpt_path=<the_checkpoint_you_just_get_above> \ # this can be found in the log dir for training GR models
-    num_hierarchies=4 \ # Please note that we add 1 for num_hierarchies because in the previous step we appended one additional digit to de-duplicate the semantic IDs we generate.
+    semantic_id_path=<第3步的输出路径>/pickle/merged_predictions_tensor.pt \
+    ckpt_path=<上面训练得到的检查点路径> \ # 可在训练生成式推荐模型的日志目录中找到
+    num_hierarchies=4 \ # 注意：我们将 num_hierarchies 加1，因为在第3步中我们为语义ID添加了一个额外的去重数字
 ```
 
-## Supported Models:
+## 支持的模型：
 
-### Semantic ID:
+### 语义ID：
 
-1. Residual K-means proposed in One-Rec [2]
-2. Residual Vector Quantization
-3. Residual Quantization with Variational Autoencoder [3]
+1. 残差K均值（Residual K-means），来自 One-Rec [2]
+2. 残差向量量化（Residual Vector Quantization）
+3. 基于变分自编码器的残差量化（Residual Quantization with VAE）[3]
 
-### Generative Recommendation:
+### 生成式推荐：
 
 1. TIGER [1]
 
-## 📚 Citation
+## 📚 引用
 
-If you use GRID in your research, please cite:
+如果您在研究中使用了 GRID，请引用：
 
 ```bibtex
 @inproceedings{grid,
@@ -130,20 +130,20 @@ If you use GRID in your research, please cite:
 }
 ```
 
-## 🤝 Acknowledgments
+## 🤝 致谢
 
-- Built with [PyTorch](https://pytorch.org/) and [PyTorch Lightning](https://lightning.ai/)
-- Configuration management by [Hydra](https://hydra.cc/)
-- Inspired by recent advances in generative AI and recommendation systems
-- Part of this repo is built on top of https://github.com/ashleve/lightning-hydra-template
+- 基于 [PyTorch](https://pytorch.org/) 和 [PyTorch Lightning](https://lightning.ai/) 构建
+- 配置管理使用 [Hydra](https://hydra.cc/)
+- 受生成式AI和推荐系统最新进展的启发
+- 本仓库部分基于 https://github.com/ashleve/lightning-hydra-template 构建
 
-## 📞 Contact
+## 📞 联系方式
 
-For questions and support:
-- Create an issue on GitHub
-- Contact the development team: Clark Mingxuan Ju (mju@snap.com), Liam Collins (lcollins2@snap.com), Bhuvesh Kumar (bhuvesh@snap.com) and Leonardo Neves (lneves@snap.com).
+如有问题和支持需求：
+- 在 GitHub 上创建 Issue
+- 联系开发团队：Clark Mingxuan Ju (mju@snap.com)、Liam Collins (lcollins2@snap.com)、Bhuvesh Kumar (bhuvesh@snap.com) 和 Leonardo Neves (lneves@snap.com)
 
-## Bibliography 
+## 参考文献 
 
 [1] Rajput, Shashank, et al. "Recommender systems with generative retrieval." Advances in Neural Information Processing Systems 36 (2023): 10299-10315.
 

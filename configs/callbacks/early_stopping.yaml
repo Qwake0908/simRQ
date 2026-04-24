@@ -1,16 +1,16 @@
-## EarlyStopping is used to stop the training if the monitored quantity does not improve.
-## implements callback from https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.callbacks.EarlyStopping.html
+## EarlyStopping 用于在监控指标不再改善时停止训练。
+## 实现了 https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.callbacks.EarlyStopping.html 的回调
 
 early_stopping:
   _target_: lightning.pytorch.callbacks.EarlyStopping
-  monitor: ??? # quantity to be monitored, must be specified !!!
-  min_delta: 0. # minimum change in the monitored quantity to qualify as an improvement
-  patience: 3 # number of checks with no improvement after which training will be stopped
-  verbose: False # verbosity mode
-  mode: "min" # "max" means higher metric value is better, can be also "min"
-  strict: True # whether to crash the training if monitor is not found in the validation metrics
-  check_finite: True # when set True, stops training when the monitor becomes NaN or infinite
-  stopping_threshold: null # stop training immediately once the monitored quantity reaches this threshold
-  divergence_threshold: null # stop training as soon as the monitored quantity becomes worse than this threshold
-  check_on_train_epoch_end: null # whether to run early stopping at the end of the training epoch
-  # log_rank_zero_only: False  # this keyword argument isn't available in stable version
+  monitor: ??? # 要监控的指标，必须指定！！！
+  min_delta: 0. # 监控指标的最小变化量，以判定为改善
+  patience: 3 # 在多少次检查无改善后停止训练
+  verbose: False # 详细模式
+  mode: "min" # "max" 表示指标值越高越好，也可以是 "min"
+  strict: True # 如果在验证指标中找不到监控指标是否崩溃
+  check_finite: True # 设为 True 时，当监控指标变为 NaN 或无穷大时停止训练
+  stopping_threshold: null # 当监控指标达到此阈值时立即停止训练
+  divergence_threshold: null # 当监控指标变得比此阈值更差时立即停止训练
+  check_on_train_epoch_end: null # 是否在训练 epoch 结束时运行早停
+  # log_rank_zero_only: False  # 此关键字参数在稳定版本中不可用

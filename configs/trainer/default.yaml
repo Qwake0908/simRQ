@@ -5,20 +5,20 @@ _target_: lightning.pytorch.trainer.Trainer
 
 default_root_dir: ${paths.output_dir}
 min_steps: 1
-# remember that if you use gradient accumulation, this number will only be updated after each accumulation
-# so for 40000 steps with gradient accumulation of 2, you will have 80000 batches
+# 注意：如果使用梯度累积，此数字只会在每次累积后更新
+# 因此对于 40000 步和梯度累积为 2 的情况，实际会有 80000 个批次
 max_steps: !!int 80000
 max_epochs: 10
 accelerator: cpu
 devices: 1
 num_nodes: 1
-# mixed precision for extra speed-up
+# 混合精度以获得额外加速
 precision: bf16-mixed
 log_every_n_steps: 2500
-# perform a validation loop every N training epochs
+# 每 N 个训练 epoch 执行一次验证循环
 val_check_interval: 5000
 
-# set True to to ensure deterministic results
-# makes training slower but gives more reproducibility than just setting seeds
+# 设为 True 以确保确定性结果
+# 会使训练变慢，但比仅设置种子提供更好的可复现性
 deterministic: False
 accumulate_grad_batches: 1

@@ -2,7 +2,7 @@ defaults:
   - model_checkpoint
   - early_stopping
   - model_summary
-  # - rich_progress_bar # does not work well with unbonunded datasets.
+  # - rich_progress_bar # 与无界数据集配合不佳
   - _self_
 
 model_checkpoint:

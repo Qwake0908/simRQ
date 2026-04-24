@@ -1,15 +1,15 @@
 # @package _global_
 
-## Main Training configurations.
+## 主训练配置
 
-# specify here default configuration
-# order of defaults determines the order in which configs override each other
+# 在此指定默认配置
+# defaults 的顺序决定了配置覆盖的优先级
 defaults:
   - _self_
   - data_loading: null
   - model: null
   - callbacks: default
-  - logger: csv # set logger here or use command line (e.g. `python train.py logger=tensorboard`)
+  - logger: csv # 在此设置日志记录器，或通过命令行指定（例如 `python train.py logger=tensorboard`）
   - trainer: default
   - paths: default
   - extras: default
@@ -18,28 +18,28 @@ defaults:
   - optim: null
   - eval: null
 
-  # experiment configs allow for version control of specific hyperparameters
-  # e.g. best hyperparameters for given model and datamodule
+  # 实验配置允许对特定超参数进行版本控制
+  # 例如给定模型和数据模块的最佳超参数
   - experiment: null
 
-# task name, determines output directory path
+# 任务名称，决定输出目录路径
 task_name: "train"
 
 id: ${now:%Y-%m-%d}/${now:%H-%M-%S}
-# tags to help you identify your experiments
-# you can overwrite this in experiment configs
-# overwrite from command line with `python train.py tags="[first_tag, second_tag]"`
+# 用于标识实验的标签
+# 可以在实验配置中覆盖
+# 通过命令行覆盖：`python train.py tags="[first_tag, second_tag]"`
 tags: ["dev"]
 
-# set False to skip model training
+# 设为 False 以跳过模型训练
 train: True
 
-# evaluate on test set, using best model weights achieved during training
-# lightning chooses best weights based on the metric specified in checkpoint callback
+# 在测试集上评估，使用训练过程中获得的最佳模型权重
+# Lightning 根据检查点回调中指定的指标选择最佳权重
 test: True
 
-# simply provide checkpoint path to resume training
+# 提供检查点路径以恢复训练
 ckpt_path: null
 
-# seed for random number generators in pytorch, numpy and python.random
+# PyTorch、NumPy 和 Python.random 中随机数生成器的种子
 seed: null

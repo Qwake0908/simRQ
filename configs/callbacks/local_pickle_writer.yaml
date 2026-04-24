@@ -1,4 +1,4 @@
-## Inference callback to write predictions local pickle files
+## 推理回调，将预测结果写入本地 pickle 文件
 pickle_writer:
   _target_: src.utils.inference_utils.LocalPickleWriter
   output_dir: ${paths.output_dir}/pickle

@@ -1,11 +1,11 @@
-# disable python warnings if they annoy you
+# 如果 Python 警告令你烦恼，可禁用
 ignore_warnings: False
 
-# ask user for tags if none are provided in the config
+# 如果配置中未提供标签，则要求用户输入
 enforce_tags: True
 
-# print warnings for missing configs
+# 打印缺失配置的警告
 print_config_warnings: True
 
-# pretty print config tree at the start of the run using Rich library
+# 在运行开始时使用 Rich 库美观打印配置树
 print_config: True

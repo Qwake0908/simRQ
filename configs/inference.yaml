@@ -1,7 +1,7 @@
 # @package _global_
 
 defaults:
-  - model: null # we need to have model before self to override the default model parameters that are not used in inference
+  - model: null # 我们需要在 self 之前加载 model，以覆盖推理中未使用的默认模型参数
   - _self_
   - paths: default
   - logger: csv
@@ -29,5 +29,5 @@ callbacks:
 
 
 
-# passing checkpoint path is necessary for inference
+# 推理时必须传入检查点路径
 ckpt_path: ???

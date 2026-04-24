@@ -1,6 +1,6 @@
-## Callback to show a progress bar using the Rich library.
-## Implements callback from https://lightning.ai/docs/pytorch/latest/api/lightning.pytorch.callbacks.RichProgressBar.html
-## Does not work well for unbounded datasets.
+## 使用 Rich 库显示进度条的回调。
+## 实现了 https://lightning.ai/docs/pytorch/latest/api/lightning.pytorch.callbacks.RichProgressBar.html 的回调
+## 与无界数据集配合不佳。
 # https://lightning.ai/docs/pytorch/latest/api/lightning.pytorch.callbacks.RichProgressBar.html
 
 rich_progress_bar:

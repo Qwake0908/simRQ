@@ -1,6 +1,6 @@
-## Callback that prints a summary of the model to the console.
-## Implements callback from https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.callbacks.RichModelSummary.html
+## 在控制台打印模型摘要的回调。
+## 实现了 https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.callbacks.RichModelSummary.html 的回调
 
 model_summary:
   _target_: lightning.pytorch.callbacks.RichModelSummary
-  max_depth: 1 # the maximum depth of layer nesting that the summary will include
+  max_depth: 1 # 摘要将包含的层嵌套最大深度

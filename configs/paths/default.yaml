@@ -1,25 +1,25 @@
-# path to root directory
-# this requires PROJECT_ROOT environment variable to exist
-# you can replace it with "." if you want the root to be the current working directory
+# 根目录路径
+# 需要存在 PROJECT_ROOT 环境变量
+# 如果希望根目录为当前工作目录，可替换为 "."
 root_dir: .
 
-# path to data directory
+# 数据目录路径
 data_dir: ???
 
-# path to logging directory
+# 日志目录路径
 log_dir: ${paths.root_dir}/logs
-# path to output directory, created dynamically by hydra
-# path generation pattern is specified in `configs/hydra/default.yaml`
-# use it to store all files generated during the run, like ckpts and metrics
+# 输出目录路径，由 Hydra 动态创建
+# 路径生成模式在 `configs/hydra/default.yaml` 中指定
+# 用于存储运行期间生成的所有文件，如检查点和指标
 output_dir: ${hydra:runtime.output_dir}
 
-# path to working directory
+# 工作目录路径
 work_dir: ${hydra:runtime.cwd}
 
-# We define profile_dir as different than output dir as gcs paths
-# are not supported by the profiler. At the end of the run, we copy
-# the profiler output to the output_dir
+# 我们将 profile_dir 定义为与 output_dir 不同的路径，
+# 因为分析器不支持 GCS 路径。运行结束后，我们会将
+# 分析器输出复制到 output_dir
 profile_dir: ${hydra:run.dir}/profile_output
 
-# Path for metadata used to retry jobs if they fail.
+# 用于作业失败时重试的元数据路径
 metadata_dir: ${paths.output_dir}/metadata
