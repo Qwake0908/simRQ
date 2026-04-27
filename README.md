@@ -1,154 +1,153 @@
-# 基于语义ID的生成式推荐系统 (GRID)
-[![PyTorch](https://img.shields.io/badge/pytorch-2.0%2B-red)](https://pytorch.org/)
-[![Hydra](https://img.shields.io/badge/config-hydra-89b8cd)](https://hydra.cc/)
-[![Lightning](https://img.shields.io/badge/pytorch-lightning-792ee5)](https://lightning.ai/)
-[![arXiv](https://img.shields.io/badge/arXiv-2507.22224-b31b1b.svg)](https://arxiv.org/abs/2507.22224)
+# simRQ — 语义ID量化算法对比实验框架
 
+基于 [GRID (Snap Research)](https://github.com/snap-research/GRID) 构建，用于在统一的生成式推荐框架下对比不同语义ID（Semantic ID）量化算法的性能。
 
-**GRID**（Generative Recommendation with Semantic IDs，基于语义ID的生成式推荐）是由 [Snap Research](https://research.snap.com/team/user-modeling-and-personalization.html) 的科学家和工程师团队开发的最先进的生成式推荐系统框架。本项目实现了从文本嵌入学习语义ID，以及通过基于Transformer的生成模型进行推荐的新方法。
+## 项目目的
 
-## 🚀 概述
+本项目的核心目标是：**在相同的 embedding 和推荐模型（TIGER）下，替换不同的 SID 量化算法，通过推荐指标（NDCG、Recall）对比各算法的优劣**，从而验证自研 SID 算法的性能提升。
 
-GRID 通过三个主要步骤实现生成式推荐：
+## 目录结构
 
-- **基于LLM的嵌入生成**：使用 Huggingface 上可用的任意大语言模型，将物品文本转换为嵌入向量。
-- **语义ID学习**：使用残差量化技术（如 RQ-KMeans、RQ-VAE、RVQ）将物品嵌入转换为层次化语义ID。
-- **生成式推荐**：使用 Transformer 架构以语义ID token 的形式生成推荐序列。
+```
+simRQ/
+├── configs/                        # Hydra 配置文件
+│   ├── experiment/                 # 实验配置（核心）
+│   │   ├── rkmeans_train_flat.yaml # RQ-KMeans 训练
+│   │   ├── rkmeans_inference_flat.yaml
+│   │   ├── rvq_train_flat.yaml     # RVQ 训练
+│   │   ├── rqvae_train_flat.yaml   # RQ-VAE 训练
+│   │   ├── tiger_train_flat.yaml   # TIGER 推荐模型训练
+│   │   └── tiger_inference_flat.yaml
+│   ├── callbacks/                  # 回调配置
+│   ├── trainer/                    # 训练器配置
+│   ├── paths/                      # 路径配置
+│   ├── hydra/                      # Hydra 配置
+│   ├── train.yaml                  # 训练入口配置
+│   └── inference.yaml              # 推理入口配置
+├── data/
+│   ├── amazon_data/                # 原始数据集
+│   │   ├── beauty/                 # items/ + training/ + evaluation/ + testing/
+│   │   ├── sports/
+│   │   └── toys/
+│   └── emb_data/                   # 预计算的物品 embedding（已就绪）
+│       ├── beauty.pt               # [12101, 2048]
+│       ├── sports.pt               # [18357, 2048]
+│       └── toys.pt                 # [11924, 2048]
+├── src/
+│   ├── components/                 # 通用组件（损失函数、距离度量、量化策略等）
+│   ├── data/                       # 数据加载与预处理
+│   ├── models/                     # 模型定义
+│   │   └── modules/
+│   │       ├── clustering/         # 聚类模块（MiniBatchKMeans）
+│   │       └── semantic_id/        # TIGER 生成式推荐模型
+│   ├── modules/
+│   │   └── clustering/             # SID 量化算法实现（核心）
+│   │       ├── residual_quantization.py  # 残差量化框架
+│   │       └── vector_quantization.py    # 向量量化层
+│   ├── utils/                      # 工具函数
+│   ├── train.py                    # 训练入口
+│   └── inference.py                # 推理入口
+├── logs/                           # 训练/推理日志（自动生成）
+├── requirements.txt
+└── .project-root
+```
 
-
-## 📦 安装
-
-### 前置条件
-- Python 3.10+
-- CUDA 兼容的 GPU（推荐）
-
-### 环境配置
+## 环境配置
 
 ```bash
-# 克隆仓库
-git clone https://github.com/snap-research/GRID.git
-cd GRID
-
-# 安装依赖
 pip install -r requirements.txt
 ```
 
-## 🎯 快速开始
+> 注意：部分 GPU 依赖（deepspeed、fbgemm-gpu、bitsandbytes 等）需要在有 CUDA 的 Worker 上安装。
 
-### 1. 数据准备
+## 使用方式
 
-按照以下格式准备数据集：
-```
-data/
-├── train/       # 用户历史行为的训练序列
-├── validation/  # 用户历史行为的验证序列
-├── test/        # 用户历史行为的测试序列
-└── items/       # 数据集中所有物品的文本信息
-```
+Embedding 已预计算好，直接从 SID 训练开始。使用的数据集为 `beauty`、`sports`、`toys`。
 
-我们提供了 [P5 论文](https://arxiv.org/abs/2203.13366) [4] 中使用的预处理 Amazon 数据。数据可从此 [Google Drive 链接](https://drive.google.com/file/d/1B5_q_MT3GYxmHLrMK0-lAqgpbAuikKEz/view?usp=sharing) 下载。
+### 步骤1：训练 SID 量化模型
 
-### 2. 基于LLM的嵌入生成
-
-使用大语言模型生成嵌入向量，这些嵌入将在后续步骤中转换为语义ID。
-
-```bash
-python -m src.inference experiment=sem_embeds_inference_flat data_dir=data/amazon_data/beauty # 可用数据包括 'beauty'、'sports' 和 'toys'
-```
-
-### 3. 训练和生成语义ID
-
-为第2步生成的嵌入学习语义ID质心：
+以 beauty 数据集 + RQ-KMeans 为例：
 
 ```bash
 python -m src.train experiment=rkmeans_train_flat \
     data_dir=data/amazon_data/beauty \
-    embedding_path=<第2步的输出路径>/merged_predictions_tensor.pt \ # 可在第2步的日志目录中找到
-    embedding_dim=2048 \ # 第2步使用的LLM的模型维度。本例中使用 flan-t5-xl，维度为2048。
-    num_hierarchies=3 \  # 训练3个码本
-    codebook_width=256 \ # 每个码本有256行质心
+    embedding_path=data/emb_data/beauty.pt \
+    embedding_dim=2048 \
+    num_hierarchies=3 \
+    codebook_width=256
 ```
 
-生成语义ID：
+可用的 `experiment` 配置：
+- `rkmeans_train_flat` — RQ-KMeans
+- `rvq_train_flat` — RVQ
+- `rqvae_train_flat` — RQ-VAE
+
+### 步骤2：生成语义ID
+
+用训练好的检查点推理，生成每个物品的 SID 编码：
 
 ```bash
 python -m src.inference experiment=rkmeans_inference_flat \
     data_dir=data/amazon_data/beauty \
-    embedding_path=<第2步的输出路径>/merged_predictions_tensor.pt \ 
-    embedding_dim=2048 \ 
-    num_hierarchies=3 \  
-    codebook_width=256 \ 
-    ckpt_path=<上面训练得到的检查点路径> # 可在训练语义ID的日志目录中找到
+    embedding_path=data/emb_data/beauty.pt \
+    embedding_dim=2048 \
+    num_hierarchies=3 \
+    codebook_width=256 \
+    ckpt_path=<步骤1输出的检查点路径>
 ```
 
+输出：`<日志目录>/pickle/merged_predictions_tensor.pt`，形状 `[num_items, num_hierarchies]`
 
-### 4. 使用语义ID训练生成式推荐模型
-
-使用学习到的语义ID训练推荐模型：
+### 步骤3：训练生成式推荐模型（TIGER）
 
 ```bash
 python -m src.train experiment=tiger_train_flat \
-    data_dir=data/amazon_data/beauty \ 
-    semantic_id_path=<第3步的输出路径>/pickle/merged_predictions_tensor.pt \
-    num_hierarchies=4 # 注意：我们将 num_hierarchies 加1，因为在第3步中我们为语义ID添加了一个额外的去重数字
+    data_dir=data/amazon_data/beauty \
+    semantic_id_path=<步骤2输出的SID文件路径> \
+    num_hierarchies=4
 ```
 
-### 5. 生成推荐
+> `num_hierarchies` = SID 层数 + 1（额外一位用于去重）
 
-运行推理生成推荐结果：
+### 步骤4：推理评估
 
 ```bash
 python -m src.inference experiment=tiger_inference_flat \
-    data_dir=data/amazon_data/beauty \ 
-    semantic_id_path=<第3步的输出路径>/pickle/merged_predictions_tensor.pt \
-    ckpt_path=<上面训练得到的检查点路径> \ # 可在训练生成式推荐模型的日志目录中找到
-    num_hierarchies=4 \ # 注意：我们将 num_hierarchies 加1，因为在第3步中我们为语义ID添加了一个额外的去重数字
+    data_dir=data/amazon_data/beauty \
+    semantic_id_path=<步骤2输出的SID文件路径> \
+    ckpt_path=<步骤3输出的检查点路径> \
+    num_hierarchies=4
 ```
 
-## 支持的模型：
+### 评估指标
 
-### 语义ID：
+| 指标 | 说明 |
+|------|------|
+| NDCG@5 / NDCG@10 | 归一化折损累积增益，衡量排序质量 |
+| Recall@5 / Recall@10 | 召回率，推荐列表中命中真实物品的比例 |
 
-1. 残差K均值（Residual K-means），来自 One-Rec [2]
-2. 残差向量量化（Residual Vector Quantization）
-3. 基于变分自编码器的残差量化（Residual Quantization with VAE）[3]
+模型选择依据：`val/recall@5`
 
-### 生成式推荐：
+### 对比实验流程
 
-1. TIGER [1]
-
-## 📚 引用
-
-如果您在研究中使用了 GRID，请引用：
-
-```bibtex
-@inproceedings{grid,
-  title     = {Generative Recommendation with Semantic IDs: A Practitioner's Handbook},
-  author    = {Ju, Clark Mingxuan and Collins, Liam and Neves, Leonardo and Kumar, Bhuvesh and Wang, Louis Yufeng and Zhao, Tong and Shah, Neil},
-  booktitle = {Proceedings of the 34th ACM International Conference on Information and Knowledge Management (CIKM)},
-  year      = {2025}
-}
+```
+同一份 embedding (data/emb_data/beauty.pt)
+    ├── RQ-KMeans → sid_rkmeans.pt → TIGER → NDCG/Recall
+    ├── RVQ       → sid_rvq.pt     → TIGER → NDCG/Recall
+    ├── RQ-VAE    → sid_rqvae.pt   → TIGER → NDCG/Recall
+    └── 你的方法   → sid_yours.pt   → TIGER → NDCG/Recall
 ```
 
-## 🤝 致谢
+只需替换步骤1-2的 SID 算法，步骤3-4 的 TIGER 配置完全相同（仅改 `semantic_id_path`）。
 
-- 基于 [PyTorch](https://pytorch.org/) 和 [PyTorch Lightning](https://lightning.ai/) 构建
-- 配置管理使用 [Hydra](https://hydra.cc/)
-- 受生成式AI和推荐系统最新进展的启发
-- 本仓库部分基于 https://github.com/ashleve/lightning-hydra-template 构建
+## 添加自定义 SID 算法
 
-## 📞 联系方式
+1. 在 `src/modules/clustering/` 下实现新的量化模块
+2. 在 `configs/experiment/` 下创建对应的训练配置 `your_method_train_flat.yaml` 和推理配置 `your_method_inference_flat.yaml`
+3. 训练并推理，生成 `merged_predictions_tensor.pt`（形状 `[num_items, num_hierarchies]`，int 类型）
+4. 用 TIGER 训练和评估，对比指标
 
-如有问题和支持需求：
-- 在 GitHub 上创建 Issue
-- 联系开发团队：Clark Mingxuan Ju (mju@snap.com)、Liam Collins (lcollins2@snap.com)、Bhuvesh Kumar (bhuvesh@snap.com) 和 Leonardo Neves (lneves@snap.com)
+## 致谢
 
-## 参考文献 
-
-[1] Rajput, Shashank, et al. "Recommender systems with generative retrieval." Advances in Neural Information Processing Systems 36 (2023): 10299-10315.
-
-[2] Deng, Jiaxin, et al. "Onerec: Unifying retrieve and rank with generative recommender and iterative preference alignment." arXiv preprint arXiv:2502.18965 (2025).
-
-[3] Lee, Doyup, et al. "Autoregressive image generation using residual quantization." Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2022.
-
-[4] Geng, Shijie, et al. "Recommendation as language processing (rlp): A unified pretrain, personalized prompt & predict paradigm (p5)." Proceedings of the 16th ACM conference on recommender systems. 2022.
+- 本项目基于 [GRID (Snap Research)](https://github.com/snap-research/GRID) 构建
+- 原始论文：Ju et al., "Generative Recommendation with Semantic IDs: A Practitioner's Handbook", CIKM 2025
