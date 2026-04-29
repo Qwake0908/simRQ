@@ -29,6 +29,7 @@ class ResidualQuantization(LightningModule):
         reconstruction_loss_function: Optional[nn.Module] = None,
         reconstruction_loss_weight: float = 0.0,
         normalize_residuals: bool = True,
+        use_residuals: bool = True,
         optimizer: Optional[torch.optim.Optimizer] = None,
         scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
         train_layer_wise: bool = False,
@@ -46,6 +47,9 @@ class ResidualQuantization(LightningModule):
             init_buffer_size: The size of the buffer for initializing the centroids.
             training_loop_function: The custom training loop function to use.
             normalize_residuals: Whether to normalize the residuals before quantization.
+            use_residuals: Whether to use residual quantization. If False, each layer
+                quantizes the original (encoded) vector instead of residuals (Multi-level
+                Quantization mode).
             optimizer: The optimizer to use.
             scheduler: The learning rate scheduler to use.
             quantization_loss_weight: The weight of the quantization loss.
@@ -97,6 +101,7 @@ class ResidualQuantization(LightningModule):
             self.automatic_optimization = False
         self.train_layer_wise = train_layer_wise
         self.normalize_residuals = normalize_residuals
+        self.use_residuals = use_residuals
 
         self.quantization_loss_weight = quantization_loss_weight
         self.reconstruction_loss_function = reconstruction_loss_function
@@ -208,10 +213,15 @@ class ResidualQuantization(LightningModule):
         quantization_loss = torch.tensor(0.0).to(self.device)
 
         for idx, layer in enumerate(self.quantization_layer_list):
+            if self.use_residuals:
+                layer_input = current_residuals
+            else:
+                layer_input = embeddings
+
             if self.normalize_residuals:
-                current_residuals = nn.functional.normalize(
-                    current_residuals, dim=-1
-                )  # normalize along the feature dimension
+                layer_input = nn.functional.normalize(
+                    layer_input, dim=-1
+                )
 
             # Determine whether to train the current layer
             train_layer = False
@@ -244,18 +254,17 @@ class ResidualQuantization(LightningModule):
                         train_layer = True
 
             if train_layer:
-                # We call model step inside forward because we need to get the
-                # quantization layer's loss, which is computed in the model step
                 layer_ids, layer_embeddings, layer_loss = layer.model_step(
-                    current_residuals
+                    layer_input
                 )
                 quantization_loss += layer_loss
             else:
-                layer_ids, layer_embeddings = layer.predict_step(current_residuals)
+                layer_ids, layer_embeddings = layer.predict_step(layer_input)
 
             cluster_ids.append(layer_ids)  # batch_size
             quantized_embeddings = quantized_embeddings + layer_embeddings
-            current_residuals = current_residuals - layer_embeddings
+            if self.use_residuals:
+                current_residuals = current_residuals - layer_embeddings
             if self.track_residuals:
                 all_residuals.append(current_residuals)
 
